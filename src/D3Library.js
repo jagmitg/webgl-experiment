@@ -6,40 +6,45 @@ const circleData = [
     {
         x: 100,
         y: 200,
-        radius: 80,
+        radius: 50,
         color: "red",
-        title: "Main 1",
-        description: "Description for Main Circle 1",
+        title: "Red",
+        description: "This is a red circle.",
+        time: "now",
         children: [
             {
-                radius: 50,
+                radius: 30,
                 color: "pink",
-                title: "Child 1.1",
-                description: "Description for Child Circle 1.1"
+                title: "Pink",
+                description: "This is a pink circle.",
+                time: "later"
             },
             {
-                radius: 25,
+                radius: 15,
                 color: "salmon",
-                title: "Child 1.2",
-                description: "Description for Child Circle 1.2"
+                title: "Salmon",
+                description: "This is a salmon circle.",
+                time: "future"
             }
         ]
     },
     {
-        x: 250, // Overlapping with the previous circle
+        x: 300,
         y: 200,
-        radius: 90,
+        radius: 60,
         color: "blue",
-        title: "Main 2",
-        description: "Description for Main Circle 2",
+        title: "Blue",
+        description: "This is a blue circle.",
+        time: "future",
         children: [
             {
-                radius: 60,
+                radius: 40,
                 color: "lightblue",
-                title: "Child 2.1",
-                description: "Description for Child Circle 2.1"
+                title: "Light Blue",
+                description: "This is a light blue circle.",
+                time: "now"
             },
-            { radius: 30, color: "cyan", title: "Child 2.2", description: "Description for Child Circle 2.2" }
+            { radius: 20, color: "cyan", title: "Cyan", description: "This is a cyan circle.", time: "later" }
         ]
     },
     {
@@ -49,12 +54,15 @@ const circleData = [
         color: "green",
         title: "Main 3",
         description: "Description for Main Circle 3",
+        time: "now",
+
         children: [
             {
                 radius: 70,
                 color: "lightgreen",
                 title: "Child 3.1",
-                description: "Description for Child Circle 3.1"
+                description: "Description for Child Circle 3.1",
+                time: "later"
             }
         ]
     },
@@ -65,12 +73,14 @@ const circleData = [
         color: "purple",
         title: "Main 4",
         description: "Description for Main Circle 4",
+        time: "future",
         children: [
             {
                 radius: 80,
                 color: "violet",
                 title: "Child 4.1",
-                description: "Description for Child Circle 4.1"
+                description: "Description for Child Circle 4.1",
+                time: "future"
             }
         ]
     },
@@ -80,6 +90,7 @@ const circleData = [
         radius: 120,
         color: "orange",
         title: "Main 5",
+        time: "now",
         description: "Description for Main Circle 5"
     },
     {
@@ -88,8 +99,17 @@ const circleData = [
         radius: 100,
         color: "cyan",
         title: "Main A",
+        time: "future",
         description: "Description A",
-        children: [{ radius: 60, color: "lightcyan", title: "Child A1", description: "Description A1" }]
+        children: [
+            {
+                radius: 60,
+                color: "lightcyan",
+                title: "Child A1",
+                description: "Description A1",
+                time: "future"
+            }
+        ]
     },
     {
         x: 1300,
@@ -97,13 +117,19 @@ const circleData = [
         radius: 110,
         color: "magenta",
         title: "Main B",
-        description: "Description B"
+        description: "Description B",
+        time: "now"
     }
 ];
 
 function D3Library() {
     const svgRef = useRef();
     const [selectedData, setSelectedData] = useState(null);
+    const [filter, setFilter] = useState({
+        now: true,
+        future: true,
+        later: true
+    });
 
     useEffect(() => {
         const svg = d3
@@ -122,11 +148,11 @@ function D3Library() {
 
         svg.call(zoom);
 
-        // Reset previously drawn circles
         svg.selectAll("*").remove();
 
         circleData.forEach((circle) => {
-            // Parent Circle
+            if (!filter[circle.time]) return;
+
             const parent = svg.append("g");
 
             parent
@@ -147,11 +173,12 @@ function D3Library() {
                 .attr("x", circle.x)
                 .attr("y", circle.y)
                 .attr("text-anchor", "middle")
-                .attr("dy", "0.35em") // to vertically center the text
+                .attr("dy", "0.35em")
                 .text(circle.title);
 
-            // Children Circles (Concentric Circles)
             circle.children?.forEach((child) => {
+                if (!filter[child.time]) return;
+
                 const childGroup = svg.append("g");
 
                 childGroup
@@ -176,10 +203,36 @@ function D3Library() {
                     .text(child.title);
             });
         });
-    }, [selectedData]);
+    }, [selectedData, filter]);
 
     return (
         <div>
+            <div>
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={filter.now}
+                        onChange={() => setFilter((prev) => ({ ...prev, now: !prev.now }))}
+                    />{" "}
+                    Now
+                </label>
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={filter.future}
+                        onChange={() => setFilter((prev) => ({ ...prev, future: !prev.future }))}
+                    />{" "}
+                    Future
+                </label>
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={filter.later}
+                        onChange={() => setFilter((prev) => ({ ...prev, later: !prev.later }))}
+                    />{" "}
+                    Later
+                </label>
+            </div>
             <svg ref={svgRef}></svg>
             <div className="info-panel">{selectedData}</div>
         </div>
